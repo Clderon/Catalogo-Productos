@@ -1,14 +1,19 @@
+# ========================
+# NAMESPACE
+# ========================
 resource "kubernetes_namespace" "catalogo" {
   metadata {
     name = var.namespace
   }
 }
 
-# Secret
+# ========================
+# SECRET (JWT + DB creds)
+# ========================
 resource "kubernetes_secret" "api_secret" {
   metadata {
     name      = "api-secret"
-    namespace = kubernetes_namespace.catalogo.metadata[0].name
+    namespace = var.namespace
   }
 
   data = {
@@ -22,12 +27,27 @@ resource "kubernetes_secret" "api_secret" {
   type = "Opaque"
 }
 
+# ========================
+# CONFIGMAP init.sql
+# ========================
+resource "kubernetes_config_map" "mysql_init" {
+  metadata {
+    name      = "mysql-init"
+    namespace = var.namespace
+  }
 
-# MySQL Deployment
+  data = {
+    "init.sql" = file("${path.module}/../database/init.sql")
+  }
+}
+
+# ========================
+# MYSQL DEPLOYMENT
+# ========================
 resource "kubernetes_deployment" "mysql" {
   metadata {
     name      = "mysql"
-    namespace = kubernetes_namespace.catalogo.metadata[0].name
+    namespace = var.namespace
     labels = {
       app = "mysql"
     }
@@ -37,19 +57,23 @@ resource "kubernetes_deployment" "mysql" {
     replicas = 1
 
     selector {
-      match_labels = {
-        app = "mysql"
-      }
+      match_labels = { app = "mysql" }
     }
 
     template {
       metadata {
-        labels = {
-          app = "mysql"
-        }
+        labels = { app = "mysql" }
       }
 
       spec {
+
+        volume {
+          name = "mysql-initdb"
+          config_map {
+            name = kubernetes_config_map.mysql_init.metadata[0].name
+          }
+        }
+
         container {
           name  = "mysql"
           image = "mysql:8"
@@ -67,23 +91,28 @@ resource "kubernetes_deployment" "mysql" {
           port {
             container_port = 3306
           }
+
+          volume_mount {
+            name       = "mysql-initdb"
+            mount_path = "/docker-entrypoint-initdb.d"
+          }
         }
       }
     }
   }
 }
 
-# MySQL Service
+# ========================
+# MYSQL SERVICE
+# ========================
 resource "kubernetes_service" "mysql" {
   metadata {
     name      = "mysql"
-    namespace = kubernetes_namespace.catalogo.metadata[0].name
+    namespace = var.namespace
   }
 
   spec {
-    selector = {
-      app = "mysql"
-    }
+    selector = { app = "mysql" }
 
     port {
       port        = 3306
@@ -92,11 +121,13 @@ resource "kubernetes_service" "mysql" {
   }
 }
 
-# API Deployment
+# ========================
+# API DEPLOYMENT
+# ========================
 resource "kubernetes_deployment" "api" {
   metadata {
     name      = "product-api"
-    namespace = kubernetes_namespace.catalogo.metadata[0].name
+    namespace = var.namespace
     labels = {
       app = "product-api"
     }
@@ -106,16 +137,12 @@ resource "kubernetes_deployment" "api" {
     replicas = var.replicas
 
     selector {
-      match_labels = {
-        app = "product-api"
-      }
+      match_labels = { app = "product-api" }
     }
 
     template {
       metadata {
-        labels = {
-          app = "product-api"
-        }
+        labels = { app = "product-api" }
       }
 
       spec {
@@ -123,6 +150,8 @@ resource "kubernetes_deployment" "api" {
           name  = "product-api"
           image = var.api_image
 
+          image_pull_policy = "Never"
+          
           port {
             container_port = 3000
           }
@@ -182,23 +211,24 @@ resource "kubernetes_deployment" "api" {
   }
 }
 
-# API Service
+# ========================
+# API SERVICE (LoadBalancer)
+# ========================
 resource "kubernetes_service" "api" {
   metadata {
     name      = "product-api-service"
-    namespace = kubernetes_namespace.catalogo.metadata[0].name
+    namespace = var.namespace
   }
 
   spec {
     type = "LoadBalancer"
 
-    selector = {
-      app = "product-api"
-    }
+    selector = { app = "product-api" }
 
     port {
       port        = 80
       target_port = 3000
+      
     }
   }
 }

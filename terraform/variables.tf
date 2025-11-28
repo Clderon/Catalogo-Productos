@@ -5,11 +5,11 @@ variable "namespace" {
 }
 
 variable "api_image" {
-  type        = string
-  default     = "product-api:1.0"
+  type    = string
+  default = "product-api:1.1"
 }
 
 variable "replicas" {
-  type        = number
-  default     = 2
+  type    = number
+  default = 2
 }
