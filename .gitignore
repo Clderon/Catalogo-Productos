@@ -1,0 +1,136 @@
+# ============================================
+#   GITIGNORE PROFESIONAL PARA BACKEND + DEVOPS
+# ============================================
+
+##############################################
+# NODE.JS
+##############################################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+pids
+*.pid
+*.seed
+*.log
+*.tsbuildinfo
+
+# Compiled
+dist/
+build/
+out/
+
+# Testing
+coverage/
+.nyc_output/
+
+##############################################
+# DOCKER
+##############################################
+# Archivos del contexto pesado
+**/.dockerignore
+docker-compose.override.yml
+docker-compose.debug.yml
+
+# Imágenes grandes
+*.tar
+
+##############################################
+# TERRAFORM
+##############################################
+# Archivos de estado (NO subir jamás)
+*.tfstate
+*.tfstate.*
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+crash.*.log
+
+# Carpeta .terraform
+.terraform/
+.terraform.lock.hcl
+
+# Variables sensibles
+terraform.tfvars
+*.auto.tfvars
+
+##############################################
+# KUBERNETES
+##############################################
+# Manifiestos generados
+*.yaml
+*.yml
+
+# Excepto si tienes manifests propios
+!k8s/*.yaml
+!manifests/*.yaml
+
+##############################################
+# DOTENV / SECRETS
+##############################################
+.env
+.env.*
+!.env.example
+
+# JWT, claves y secretos
+*.key
+*.pem
+*.crt
+
+##############################################
+# LOGS Y TEMPORALES
+##############################################
+logs/
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.orig
+*.lock
+
+# Cache OS
+.DS_Store
+Thumbs.db
+
+# Cache lock
+*.lock
+
+##############################################
+# SISTEMA OPERATIVO / EDITORES
+##############################################
+
+# VS Code
+.vscode/
+.history/
+
+# Windows
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+##############################################
+# PYTHON (por si luego agregas scripts)
+##############################################
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+.env
+.cache/
+
+##############################################
+# MISC
+##############################################
+.idea/
+*.iml
+*.class
+*.bak
+.tmp/
+temp/
+cache/
